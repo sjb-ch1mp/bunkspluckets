@@ -1,0 +1,301 @@
+<!DOCTYPE html>
+<html>
+<head>
+	<link rel="icon" type="image/png" href="favicon.png">
+	<title>bunkspluckets</title>
+	<style>
+		.general{
+			font-family: "Courier New";
+			font-size: large;
+			color: white;
+		}
+		.attention{
+			font-family: "Courier New";
+			font-size: large;
+			color: red;
+		}
+		.main{
+			color: white;
+			font-family: "Courier New";
+			font-size: medium;
+			padding-left: 20px;
+			padding-right: 20px;
+		}
+		.announce{
+			font-family: "Courier New";
+			font-size: medium;
+			font-weight: light;
+			padding-top: 20px;
+			padding-bottom: 20px;
+			text-align: center;
+			background-color: #7397B2;
+			color: black;
+			height: 5%;
+		}
+		body{
+			background-color: black;
+		}
+		.input_table{
+			padding: 5px 0px 10px 0px;
+		}
+		.table-heading{
+			font-family: "Courier New";
+			font-size: large;
+			color: #7397B2;
+			font-weight: bold;
+		}
+		button.menu{
+			font-family: "Courier New";
+			font-size: large;
+			padding: 5px 10px 5px 10px;
+			margin: 0px 30px 0px 30px;
+			background-color: #7397B2;
+			border: 1px #7397B2 solid;
+			font-weight: bold;
+		}
+	</style>
+	<script src="bunkspluckets.js"></script>
+</head>
+<body>
+	<img src="header.png" width="100%"/>
+	<div align="left">
+		<table>
+		<tr>
+			<td align="left" class="input_table" style="border-bottom: 2px #7397B2 solid;">
+				<input class="general" type="checkbox" id="show_index_coverage">
+				<label class="attention" for="show_index_coverage">SHOW INDEX COVERAGE</label>
+			</td>
+		</tr>
+		<tr>
+			<td align="left" class="table-heading" style="border-top: 2px #7397B2 solid;">
+				TIME SPAN
+			</td>
+		</tr>
+		<tr>
+			<td align="left" class="input_table">
+				<label class="general" for="from_day" style="font-weight: bold;">FROM :</label>
+				<select id="from_day"></select><span class="general">/</span>
+				<select id="from_month"><select><span class="general">/</span>
+				<select id="from_year"></select>
+				<select id="from_hour"></select><span class="general">:</span>
+				<select id="from_min"></select><span class="general"> Local Time</span>
+			</td>
+		</tr>
+		<tr>
+			<td align="left" class="input_table" style="border-bottom: 2px #7397B2 solid;">
+				<label class="general" for="to_day" style="font-weight: bold;">TO :</label>
+				<select id="to_day"></select><span class="general">/</span>
+				<select id="to_month"><select><span class="general">/</span>
+				<select id="to_year"></select>
+				<select id="to_hour"></select><span class="general">:</span>
+				<select id="to_min"></select><span class="general"> Local Time</span>
+			</td>
+		</tr>
+		<tr>
+			<td align="left" class="table-heading" style="border-top: 2px #7397B2 solid;">
+				OPTIONS
+			</td>
+		</tr>
+		<tr>
+			<td align="left" class="input_table">
+				<input class="general" type="checkbox" id="show_all_coverage">
+				<label class="general" for="show_all_coverage">Plot the coverage for all buckets</label>
+			</td>
+		</tr>
+		<tr>
+			<td align="left" class="input_table">
+				<input class="general" type="checkbox" id="include_replicate_buckets">
+				<label class="general" for="include_replicate_buckets">Include replicate buckets</label>
+			</td>
+		</tr>
+		<tr>
+			<td align="left" class="input_table" style="border-bottom: 2px #7397B2 solid;">
+				<input class="general" type="checkbox" id="include_zero_duration_buckets">
+				<label class="general" for="include_zero_duration_buckets">Include buckets with a duration of 0s</label>
+			</td>
+		</tr>
+		<tr>
+			<td align="left" class="table-heading" style="border-top: 2px #7397B2 solid;">
+				LOAD DIRECTORY LISTS
+			</td>
+		</tr>
+		<tr>
+			<td  align="left" class="input_table" style="border-bottom: 2px #7397B2 solid;">
+				<input class="general" type="file" id="file_input" onchange="loadMultipleFiles(this.files)" multiple>
+			</td>
+		</tr>
+		<tr>
+			<td align="left" class="table-heading" style="border-top: 2px #7397B2 solid;">
+				DOWNLOAD
+			</td>
+		</tr>
+		<tr>
+			<td align="left" class="input_table">
+				<button class="menu" id="download_report" onclick="downloadLast(this.id)">COVERAGE REPORT</button>
+				<button class="menu" id="download_bucket_list" onclick="downloadLast(this.id)">BUCKET LIST</button>
+			</td>
+		</tr>
+		</table>
+	</div>
+	<h3 class="announce" id="announcement"></h3>
+	<p class="main" id="results"></p>
+</body>
+<script>
+	let lastBucketList = null;
+	let lastReport = null;
+	
+	window.onload = function(){
+		populateDropDown("from_day", 1, 31, 2);
+		populateDropDown("from_month", 1, 12, 2);
+		populateDropDown("from_year", 2000, 2050, null);
+		populateDropDown("from_hour", 0, 24, 2);
+		populateDropDown("from_min", 0, 59, 2);
+		populateDropDown("to_day", 1, 31, 2);
+		populateDropDown("to_month", 1, 12, 2);
+		populateDropDown("to_year", 2000, 2050, null);
+		populateDropDown("to_hour", 0, 24, 2);
+		populateDropDown("to_min", 0, 59, 2);
+	}
+	
+	function populateDropDown(id, from, to, pad){
+		let select = document.getElementById(id);
+		for(let i=from; i<=to; i++){
+			let option = document.createElement("option");
+			let value = (pad)?padNumber(i, pad):i;
+			option.setAttribute("value", value);
+			option.innerText = value;
+			select.appendChild(option);
+		}
+	}
+	
+	function downloadLast(id){
+		if(id === "download_bucket_list"){
+			if(lastBucketList == null){
+				announceError("There is no bucket list to download!");
+			}else{
+				downloadResults(lastBucketList["name"], lastBucketList["contents"], "text/csv");
+			}
+		}else{
+			if(lastBucketList == null){
+				announceError("There is no report to download!");
+			}else{
+				downloadResults(lastReport["name"], lastReport["contents"], "text/plain");
+			}
+		}
+	}
+	
+	function convertToUnixTimeString(yearFrom, monthFrom, dayFrom, hourFrom, minFrom){
+		let date = new Date(yearFrom + "-" + monthFrom + "-" + dayFrom + "T" + hourFrom + ":" + minFrom + ":00");
+		return "" + date.getTime()/1000;
+	}
+	
+	function padNumber(number, padLength){
+		let numString = "" + number;
+		while(numString.length < padLength){
+			numString = "0" + numString;
+		}
+		return numString;
+	}
+	
+	function loadMultipleFiles(files){
+	
+		if(results.innerText == ""){
+			hideAnnouncement();
+		}else{
+			results.innerText = "";
+		}
+		
+		let showIndexCoverage = document.getElementById("show_index_coverage").checked;		
+		let timeFrom = null;
+		let timeTo = null;
+		
+		if(!showIndexCoverage){
+			//check necessary parameters
+			try{
+				timeFrom = convertToUnixTimeString(
+					document.getElementById("from_year").value,
+					document.getElementById("from_month").value,
+					document.getElementById("from_day").value,
+					document.getElementById("from_hour").value,
+					document.getElementById("from_min").value
+				);
+			}catch(e){
+				announceError(e.message);
+				return;
+			}
+			if(!(looksLikeEpochTime(timeFrom))){
+				announceError("'From' time is not a valid epoch time.");
+				return;
+			}
+			try{
+				timeTo = convertToUnixTimeString(
+						document.getElementById("to_year").value,
+						document.getElementById("to_month").value,
+						document.getElementById("to_day").value,
+						document.getElementById("to_hour").value,
+						document.getElementById("to_min").value
+					);
+			}catch(e){
+				announceError(e.message);
+				return;
+			}
+			if(!(looksLikeEpochTime(timeTo))){
+				announceError("'To' time is not a valid epoch time.");
+				return;
+			}
+			if(parseInt(timeTo) < parseInt(timeFrom)){
+				announceError("'From' time cannot be later than 'To' time.");
+				return;
+			}
+			if(parseInt(timeTo) === parseInt(timeFrom)){
+				announceError("'From' time cannot be equal to 'To' time.");
+				return;
+			}
+		}
+		
+		//filter out those objects that are not text files
+		let textFiles = [];
+		let fileNames = [];
+		for(let i in files){
+			if(files[i].type === "text/plain"){
+				textFiles.push(files[i]);
+				fileNames.push(files[i].name);
+			}
+		}
+		if(textFiles.length === 0){
+			announceError("Bunksplucket requires .txt files to work!");
+			return;
+		}
+		
+		//read multiple files
+		//REFERENCE: https://ourcodeworld.com/articles/read/1438/how-to-read-multiple-files-at-once-using-the-filereader-class-in-javascript
+		let readers = [];
+		for(let i in textFiles){
+			readers.push(readFileAsText(textFiles[i]));
+		}
+		
+		//REFERENCE: https://ourcodeworld.com/articles/read/1438/how-to-read-multiple-files-at-once-using-the-filereader-class-in-javascript
+		let parsedFiles = {};
+		Promise.all(readers).then((fileContents) => {
+			bunkspluckets(fileNames, fileContents, timeFrom, timeTo, showIndexCoverage);
+		});
+	}
+	
+	//REFERENCE: https://ourcodeworld.com/articles/read/1438/how-to-read-multiple-files-at-once-using-the-filereader-class-in-javascript
+	function readFileAsText(file){
+		return new Promise(function(resolve, reject){
+			let reader = new FileReader();
+			
+			reader.onload = function(){
+				resolve(reader.result);
+			};
+			
+			reader.onerror = function(){
+				reject(reader.error);
+			};
+			
+			reader.readAsText(file);
+		});
+	}
+</script>
+</html>
