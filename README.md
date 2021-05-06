@@ -1,4 +1,4 @@
-[![bunkspluckets](https://github.com/sjb-ch1mp/bunkspluckets/blob/main/header.png)
+[![bunkspluckets](https://github.com/sjb-ch1mp/bunkspluckets/blob/main/header.png)](https://github.com/sjb-ch1mp/bunkspluckets/blob/main/README.md)
 
 [![Creative Commons License](https://i.creativecommons.org/l/by-nc-sa/4.0/88x31.png)](http://creativecommons.org/licenses/by-nc-sa/4.0/)
 
