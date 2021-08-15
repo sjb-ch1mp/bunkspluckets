@@ -6,7 +6,7 @@ function bunkspluckets(indexerNames, bucketNames, timeFrom, timeTo, showIndexCov
 	let indexers = {};
 	for(let i=0; i<indexerNames.length; i++){
 		let indexName = (indexerNames[i].endsWith('.txt')) ? indexerNames[i].split('.txt')[0]: indexerNames[i];
-		let filesAndDirectories = bucketNames[i].split(/\r\n/);
+		let filesAndDirectories = bucketNames[i].split(/\r?\n/);
 		let buckets = [];
 		for(let j in filesAndDirectories){
 			if(looksLikeBucket(filesAndDirectories[j])){
