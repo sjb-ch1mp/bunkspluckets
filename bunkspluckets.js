@@ -7,6 +7,16 @@ function bunkspluckets(indexerNames, bucketNames, timeFrom, timeTo, showIndexCov
 	for(let i=0; i<indexerNames.length; i++){
 		let indexName = (indexerNames[i].endsWith('.txt')) ? indexerNames[i].split('.txt')[0]: indexerNames[i];
 		let filesAndDirectories = bucketNames[i].split(/\r?\n/);
+		
+		//check for ls -laht output
+		if(filesAndDirectories.length > 1 && (/^total\s+/.test(filesAndDirectories[0]) || /[drwx\-\.]{11}\s+/.test(filesAndDirectories[1]))){
+			//if either of those are true - this is output of ls -laht
+			for(let i=0; i<filesAndDirectories.length; i++){
+				let fileInfo = filesAndDirectories[i].split(/\s+/);
+				filesAndDirectories[i] = fileInfo[fileInfo.length - 1];
+			}
+		}
+		
 		let buckets = [];
 		for(let j in filesAndDirectories){
 			if(looksLikeBucket(filesAndDirectories[j])){
@@ -28,7 +38,6 @@ function bunkspluckets(indexerNames, bucketNames, timeFrom, timeTo, showIndexCov
 		let overallMin = null;
 		let overallMax = null;
 		for(let indexer in indexers){
-			console.log("looking at index " + indexer);
 			let buckets = indexers[indexer]["buckets"];
 			buckets.sort((a, b)=>a.min-b.min);
 			let indexerMin = buckets[0].min;
@@ -131,6 +140,7 @@ function bunkspluckets(indexerNames, bucketNames, timeFrom, timeTo, showIndexCov
 	report += formatReportLine("Plot Units: Less than or equal to " + changeToDuration(0, (parseInt(timeTo)-parseInt(timeFrom))/100), "subheading");
 	report += formatReportLine("Coverage Plot:", "subheading");
 	report += formatReportLine(getPlotHeader(dateFrom, dateTo) + " INDEXER_NAME [NUM_BUCKETS - COVERAGE]", "");
+	
 	for(let indexer in filteredIndexers){
 		let coverage = calculateCoverage(timeFrom, timeTo, filteredIndexers[indexer]["gaps"], filteredIndexers[indexer]["numClippedBuckets"]);
 		if(filteredIndexers[indexer]["numClippedBuckets"] > 0){
@@ -154,7 +164,7 @@ function bunkspluckets(indexerNames, bucketNames, timeFrom, timeTo, showIndexCov
 		
 		//Coverage
 		report += formatReportLine(indexer, "subheading");
-		report += formatReportLine("Applicable buckets: " + filteredIndexers[indexer]["numClippedBuckets"] + "/" + filteredIndexers[indexer]["numBuckets"], "");
+		report += formatReportLine("Applicable buckets: " + filteredIndexers[indexer]["numClippedBuckets"] + "/" + filteredIndexers[indexer]["numBuckets"], "");	
 		report += formatReportLine("Coverage: " + calculateCoverage(timeFrom, timeTo, gaps, buckets.length) + "%", "");
 		
 		//Gaps
@@ -254,7 +264,7 @@ function addGapsToCoveragePlot(coveragePlot, from, to, gaps){
 		}
 		for(let i in gapCoveragePlots){
 			for(let j=0; j<gapCoveragePlots[i].length; j++){
-				if(gapCoveragePlots[i].charAt(j) === "="){
+				if(gapCoveragePlots[i].charAt(j) === "#"){ //CHANGED
 					coveragePlot[j] = "-";
 				}
 			}
